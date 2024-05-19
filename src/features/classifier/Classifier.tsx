@@ -22,8 +22,8 @@ export function Classifier() {
       <div className="flex gap-2">
         <button onClick={image.zoomOut}>-</button>
         <button onClick={image.zoomIn}>+</button>
-        <button onClick={image.prev}>Prev</button>
-        <button onClick={image.next}>Next</button>
+        {image.hasPrev ? <button onClick={image.prev}>Prev</button> : null}
+        {image.hasNext ? <button onClick={image.next}>Next</button> : null}
       </div>
       <div className="flex gap-2 justify-center mt-2">
         <ClassificationButton>Class 1</ClassificationButton>
@@ -41,6 +41,8 @@ type UseImg = {
   zoomOut: () => void;
   imgRef: React.RefObject<HTMLImageElement>;
   classifySelectedImage: (classification: string) => void;
+  hasNext: boolean;
+  hasPrev: boolean;
 };
 
 function Img({ image, imgRef }: UseImg) {
@@ -81,6 +83,10 @@ function useImg(imageSrcs: string[]): UseImg {
     setSelectedImage((curr) => curr - 1);
   }, []);
 
+  const hasNext = selectedImage !== imageSrcs.length - 1
+
+  const hasPrev = selectedImage !== 0
+
   const zoomIn = useCallback(() => {
     if (viewerRef.current) viewerRef.current.zoom(0.1);
   }, []);
@@ -95,7 +101,7 @@ function useImg(imageSrcs: string[]): UseImg {
     })
   }, [images, selectedImage]);
 
-  return { image: images[selectedImage], next, prev, imgRef, zoomIn, zoomOut, classifySelectedImage };
+  return { image: images[selectedImage], next, prev, imgRef, zoomIn, zoomOut, classifySelectedImage, hasNext, hasPrev };
 }
 
 function ClassificationButton({ children }: { children: React.ReactNode }) {
