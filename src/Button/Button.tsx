@@ -7,8 +7,8 @@ export type ButtonProps = {
     emphasis?: ButtonEmphasis;
 } & HTMLAttributes<HTMLButtonElement>;
 
-export function Button({ children, emphasis = 'medium', ...rest }: ButtonProps) {
-    return <button className={getClasses(emphasis)} {...rest}>{children}</button>
+export function Button({ children, className, emphasis = 'medium', ...rest }: ButtonProps) {
+    return <button className={`${getClasses(emphasis)}${className ? ` ${className}` : ''}`} {...rest}>{children}</button>
 }
 
 function getClasses(emphasis: ButtonEmphasis): string {
@@ -17,7 +17,7 @@ function getClasses(emphasis: ButtonEmphasis): string {
         case 'high':
             return `${baseClasses} bg-primary text-white`;
         case 'medium':
-            return `${baseClasses} border-primary border-2`;
+            return `${baseClasses} border-primary border-2 hover:bg-primary hover:text-white text-primary`;
         case 'low':
             return `${baseClasses} bg-gray-200 text-black`;
         default:

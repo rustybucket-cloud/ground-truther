@@ -1,113 +1,154 @@
-import { useRef, useEffect, useState, useCallback } from "react";
-import "viewerjs/dist/viewer.css";
-import Viewer from "viewerjs";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { Button } from "../../Button/Button";
+import { ImageViewer, useImageViewer } from "../../components";
+import { css } from "@linaria/core";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Description,
+} from "@headlessui/react";
 
-type ImageType = {
+const classifierCss = css`
+  height: calc(100vh - var(--header-height));
+  --bottom-content-height: 0px;
+`;
+
+export function Classifier() {
+  const [isOpen, setIsOpen] = useState(true);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const imageViewer = useImageViewer(uploadedImages);
+
+  return (
+    <div className={classifierCss}>
+      {uploadedImages.length > 0 ? (
+        <ImageViewer
+          {...imageViewer}
+          controls={
+            <ClassificationControls images={uploadedImages} imageViewer={imageViewer} />
+          }
+        />
+      ) : null}
+      {uploadedImages.length === 0 ? (
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => {
+            if (!e.target.files) return;
+            const urls = Array.from(e.target.files).map((file) => URL.createObjectURL(file));
+            setUploadedImages((curr) => [...curr, ...urls]);
+          }}
+        />
+      ) : null}
+      <Dialog open={isOpen} onClose={() => setIsOpen(false)}>
+        <div className="bg-gray-800">
+          <DialogPanel className="bg-primary">
+            <DialogTitle>Add Classification</DialogTitle>
+            <Description>
+              Add a classification for the current image
+            </Description>
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </div>
+  );
+}
+
+type Classification = {
   src: string;
   classification?: string;
 };
 
-const images = [
-  "https://media.istockphoto.com/id/532048136/photo/fresh-red-apple-isolated-on-white-with-clipping-path.jpg?s=2048x2048&w=is&k=20&c=o5iB_Nz86vATCXObzj-quBI_OV7N1HeknHkqNWIwAH4=",
-  "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-];
-
-export function Classifier() {
-  const image = useImg(images);
-
-  return (
-    <div className="max-h-screen">
-      <h1 className="text-xl">Classifier</h1>
-      <Img {...image} />
-      <div className="flex gap-2">
-        <button onClick={image.zoomOut}>-</button>
-        <button onClick={image.zoomIn}>+</button>
-        {image.hasPrev ? <button onClick={image.prev}>Prev</button> : null}
-        {image.hasNext ? <button onClick={image.next}>Next</button> : null}
-      </div>
-      <div className="flex gap-2 justify-center mt-2">
-        <ClassificationButton>Class 1</ClassificationButton>
-        <ClassificationButton>Class 2</ClassificationButton>
-      </div>
-    </div>
+function ClassificationControls({
+  images,
+  imageViewer,
+}: {
+  images: string[];
+  imageViewer: any;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [classifications, setClassifications] = useState<Classification[]>(
+    images.map((image) => ({ src: image }))
   );
-}
+  const [query, setQuery] = useState("");
 
-type UseImg = {
-  image: ImageType;
-  next: () => void;
-  prev: () => void;
-  zoomIn: () => void;
-  zoomOut: () => void;
-  imgRef: React.RefObject<HTMLImageElement>;
-  classifySelectedImage: (classification: string) => void;
-  hasNext: boolean;
-  hasPrev: boolean;
-};
+  const classificationOptions = useMemo(() => {
+    return classifications.reduce((prev, classification) => {
+      if (
+        classification.classification &&
+        !prev.includes(classification.classification)
+      ) {
+        return [...prev, classification.classification];
+      }
+      return prev;
+    }, []);
+  }, [classifications]);
 
-function Img({ image, imgRef }: UseImg) {
-  return (
-    <div>
-      <img className="max-h-[750px]" ref={imgRef} src={image.src} />
-    </div>
+  const setImageClassification = useCallback(
+    (classification: string) => {
+      setClassifications((prev) => {
+        const newClassifications = [...prev];
+        newClassifications[imageViewer.currentImageIndex].classification =
+          classification;
+        return newClassifications;
+      });
+      setQuery("");
+      inputRef.current?.blur();
+      imageViewer.imageViewerRef.current.focus();
+      imageViewer.nextImage();
+    },
+    [imageViewer]
   );
-}
 
-function useImg(imageSrcs: string[]): UseImg {
-  const [images, setImages] = useState(imageSrcs.map((src) => ({ src })));
-  const [selectedImage, setSelectedImage] = useState(0);
-  const imgRef = useRef<HTMLImageElement|null>(null);
-  const viewerRef = useRef<Viewer|null>(null);
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setImageClassification(query);
+  };
 
   useEffect(() => {
-    if (imgRef.current == null) return () => {};
-    viewerRef.current = new Viewer(imgRef.current, {
-      inline: true,
-      navbar: false,
-      toolbar: false,
-      url() {
-        return images[selectedImage].src;
-      },
-    });
+    const handleKeyUp = (event: KeyboardEvent) => {
+      console.log("key", event);
+      if (inputRef.current === document.activeElement) return;
+      if (event.key === "ArrowRight") imageViewer.nextImage();
+      if (event.key === "ArrowLeft") imageViewer.prevImage();
+      if (event.key === "n") inputRef.current?.focus();
+      classificationOptions.forEach((classification, i) => {
+        if (event.key === `${i + 1}`) {
+          setImageClassification(classification);
+        }
+      });
+    };
+    document?.addEventListener("keydown", handleKeyUp);
 
     return () => {
-      if (viewerRef.current) viewerRef.current.destroy();
+      document?.removeEventListener("keydown", handleKeyUp);
     };
-  }, [images, selectedImage]);
+    // we don't include the imageViewer here
+    // we don't want to recreate the event listener every time the imageViewer changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classificationOptions, setImageClassification]);
 
-  const next = useCallback(() => {
-    setSelectedImage((curr) => curr + 1);
-  }, []);
-
-  const prev = useCallback(() => {
-    setSelectedImage((curr) => curr - 1);
-  }, []);
-
-  const hasNext = selectedImage !== imageSrcs.length - 1
-
-  const hasPrev = selectedImage !== 0
-
-  const zoomIn = useCallback(() => {
-    if (viewerRef.current) viewerRef.current.zoom(0.1);
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    if (viewerRef.current) viewerRef.current.zoom(-0.1);
-  }, []);
-
-  const classifySelectedImage = useCallback((classification: string) => {
-    setImages((curr) => {
-        return curr.map((image) => image.src === images[selectedImage].src ? {...image, classification } : image)
-    })
-  }, [images, selectedImage]);
-
-  return { image: images[selectedImage], next, prev, imgRef, zoomIn, zoomOut, classifySelectedImage, hasNext, hasPrev };
-}
-
-function ClassificationButton({ children }: { children: React.ReactNode }) {
   return (
-    <button className="border-primary border-2 p-3 rounded hover:bg-primary">
-      {children}
-    </button>
+    <div className="flex gap-2">
+      {classificationOptions.map((classification, i) => (
+        <Button
+          key={classification}
+          onClick={() => setImageClassification(classification)}
+          data-classification={classification}
+          emphasis="high"
+        >
+          {i + 1}: {classification}
+        </Button>
+      ))}
+      <form onSubmit={onSubmit}>
+        <input
+          className="p-3 rounded"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          ref={inputRef}
+        />
+      </form>
+    </div>
   );
 }

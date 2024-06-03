@@ -13,8 +13,8 @@ export function ImageViewerControls({
   return (
     <div className="flex justify-center items-center gap-4 border-primary border-2 rounded max-w-[300px] w-full px-3 py-2">
       <IconButton onClick={prev} disabled={!hasPrev} Icon={ArrowLeft} />
-      <IconButton onClick={zoomOut} Icon={Minus} />
-      <IconButton onClick={zoomIn} Icon={Plus} />
+      {/* <IconButton onClick={zoomOut} Icon={Minus} /> */}
+      {/* <IconButton onClick={zoomIn} Icon={Plus} /> */}
       <IconButton onClick={next} disabled={!hasNext} Icon={ArrowRight} />
     </div>
   );

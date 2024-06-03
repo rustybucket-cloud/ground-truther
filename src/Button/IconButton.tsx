@@ -5,5 +5,5 @@ export type IconButtonProps = {
 } & ButtonProps;
 
 export function IconButton({ Icon, ...props }: IconButtonProps) {
-    return <Button {...props}><Icon /></Button>
+    return <Button {...props}><Icon className="fill-black" /></Button>
 }

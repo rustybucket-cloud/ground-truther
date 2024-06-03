@@ -1,1 +1,0 @@
-export const sharedClasses = "fill-primary h-[25px]"
