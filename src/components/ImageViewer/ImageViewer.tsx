@@ -31,7 +31,7 @@ export function ImageViewer({
     <div className="relative">
       <div
         ref={imageViewerRef}
-        style={{ "--image-viewer-width": window.innerWidth }}
+        style={{ "--image-viewer-width": window.innerWidth } as React.CSSProperties}
         className={imageViewerCss}
       />
       {controls ? (
