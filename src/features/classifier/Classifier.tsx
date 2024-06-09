@@ -22,6 +22,7 @@ export function Classifier() {
   const imageViewer = useImageViewer(uploadedImages);
   const [isFinished, setIsFinished] = useState(false);
   const [classifications, setClassifications] = useState<Classification[]>([]);
+  const fileNamesRef = useRef()
 
   const classifcationCounts = useMemo(() => {
     return classifications.reduce((prev, classification) => {
@@ -54,8 +55,8 @@ export function Classifier() {
         const response = await fetch(classification.src);
         const blob = await response.blob();
         folders[folderNames.indexOf(classification.classification)].file(
-          `${i}.jpg`,
-          new File([blob], `${i}.jpg`, { type: "image/jpeg" })
+          `${fileNamesRef.current[i]}`,
+          new File([blob], `${fileNamesRef.current[i]}`, { type: "image/jpeg" })
         );
       })
     );
@@ -97,9 +98,14 @@ export function Classifier() {
           multiple
           onChange={(e) => {
             if (!e.target.files) return;
-            const urls = Array.from(e.target.files).map((file) =>
-              URL.createObjectURL(file)
-            );
+            const urls = Array.from(e.target.files).map((file) => {
+              return URL.createObjectURL(file);
+            });
+            // store the filenames separately so we can use them later
+            // for some reason when we try to make the blob and the filename the same object, it doesn't work
+            fileNamesRef.current = Array.from(e.target.files).map((file) => {
+              return file.name;
+            })
             setUploadedImages((curr) => [...curr, ...urls]);
             setClassifications((curr) => [
               ...curr,
