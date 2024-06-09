@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo, FormEventHandler } from "react";
 import { Button } from "../../Button/Button";
-import { ImageViewer, useImageViewer } from "../../components";
+import { ImageViewer, useImageViewer, UseImageViewerReturn } from "../../components";
 import { css } from "@linaria/core";
 import {
   Dialog,
@@ -16,16 +16,20 @@ const classifierCss = css`
   --bottom-content-height: 0px;
 `;
 
+type ClassificationCounts = {
+  [classification: string]: number;
+};
+
 export function Classifier() {
   const [isOpen, setIsOpen] = useState(true);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const imageViewer = useImageViewer(uploadedImages);
   const [isFinished, setIsFinished] = useState(false);
   const [classifications, setClassifications] = useState<Classification[]>([]);
-  const fileNamesRef = useRef()
+  const fileNamesRef = useRef<string[]>([])
 
   const classifcationCounts = useMemo(() => {
-    return classifications.reduce((prev, classification) => {
+    return classifications.reduce((prev: ClassificationCounts, classification) => {
       if (classification.classification) {
         return {
           ...prev,
@@ -43,18 +47,14 @@ export function Classifier() {
 
   const createZip = useCallback(async () => {
     const zip = new JSZip();
-    const folderNames = [];
-    const folders = [];
     await Promise.all(
       classifications.map(async (classification, i) => {
         if (!classification.classification) return;
-        if (!folderNames.includes(classification.classification)) {
-          folderNames.push(classification.classification);
-          folders.push(zip.folder(classification.classification));
-        }
+        const folder = zip.folder(classification.classification);
+        if (!folder) return;
         const response = await fetch(classification.src);
         const blob = await response.blob();
-        folders[folderNames.indexOf(classification.classification)].file(
+        folder.file(
           `${fileNamesRef.current[i]}`,
           new File([blob], `${fileNamesRef.current[i]}`, { type: "image/jpeg" })
         );
@@ -156,16 +156,16 @@ function ClassificationControls({
   setClassifications,
 }: {
   images: string[];
-  imageViewer: any;
+  imageViewer: UseImageViewerReturn;
   finish: (classifications: Classification[]) => void;
   classifications: Classification[];
-  setClassifications: (classifications: Classification[]) => void;
+  setClassifications: React.Dispatch<React.SetStateAction<Classification[]>>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
 
-  const classificationOptions = useMemo(() => {
-    return classifications.reduce((prev, classification) => {
+  const classificationOptions: string[] = useMemo(() => {
+    return classifications.reduce((prev: string[], classification) => {
       if (
         classification.classification &&
         !prev.includes(classification.classification)
@@ -178,7 +178,7 @@ function ClassificationControls({
 
   const setImageClassification = useCallback(
     (classification: string) => {
-      setClassifications((prev) => {
+      setClassifications((prev: Classification[]) => {
         const newClassifications = [...prev];
         newClassifications[imageViewer.currentImageIndex].classification =
           classification;
@@ -186,14 +186,14 @@ function ClassificationControls({
       });
       setQuery("");
       inputRef.current?.blur();
-      imageViewer.imageViewerRef.current.focus();
+      if (imageViewer.imageViewerRef.current) imageViewer.imageViewerRef.current.focus();
       if (imageViewer.hasNext) imageViewer.nextImage();
       else finish(classifications);
     },
     [classifications, finish, imageViewer, setClassifications]
   );
 
-  const onSubmit = (e) => {
+  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     setImageClassification(query);
   };

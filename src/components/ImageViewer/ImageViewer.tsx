@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { IconButton } from "../../Button/IconButton";
 import { ArrowRight, ArrowLeft } from "../Icons";
-import { ImageViewerType } from "./types";
 import OpenSeadragon from "openseadragon";
 import { css } from "@linaria/core";
 
@@ -11,6 +10,15 @@ const imageViewerCss = css`
   background-color: #d3d3d3;
 `;
 
+type ImageViewerProps = {
+  imageViewerRef: React.RefObject<HTMLDivElement>;
+  hasNext: boolean;
+  hasPrev: boolean;
+  nextImage: () => void;
+  prevImage: () => void;
+  controls?: React.ReactNode;
+};
+
 export function ImageViewer({
   imageViewerRef,
   hasNext,
@@ -18,7 +26,7 @@ export function ImageViewer({
   nextImage,
   prevImage,
   controls,
-}: ImageViewerType) {
+}: ImageViewerProps) {
   return (
     <div className="relative">
       <div
@@ -53,7 +61,18 @@ export function ImageViewer({
   );
 }
 
-export function useImageViewer(images: string[]) {
+export type UseImageViewerReturn = {
+  image: string;
+  imageViewerRef: React.RefObject<HTMLDivElement>;
+  currentImageIndex: number;
+  setCurrentImageIndex: React.Dispatch<React.SetStateAction<number>>;
+  nextImage: () => void;
+  prevImage: () => void;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+export function useImageViewer(images: string[]): UseImageViewerReturn {
   const imageViewerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<OpenSeadragon.Viewer | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
