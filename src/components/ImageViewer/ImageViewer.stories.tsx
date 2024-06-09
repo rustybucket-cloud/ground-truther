@@ -1,5 +1,4 @@
 import { ImageViewer, useImageViewer } from "./ImageViewer";
-import { ImageViewerWithControls } from "./ImageViewerWithControls";
 
 const images = [
   "https://media.istockphoto.com/id/532048136/photo/fresh-red-apple-isolated-on-white-with-clipping-path.jpg?s=2048x2048&w=is&k=20&c=o5iB_Nz86vATCXObzj-quBI_OV7N1HeknHkqNWIwAH4=",
@@ -18,8 +17,4 @@ export const Basic = () => {
       <ImageViewer {...imageViewer} />
     </div>
   );
-};
-
-export const WithControls = () => {
-  return <ImageViewerWithControls images={images} />;
 };
