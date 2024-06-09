@@ -226,6 +226,12 @@ function ClassificationControls({
   useHotkeys("ArrowLeft", () => {
     imageViewer.prevImage();
   });
+  useHotkeys("ctrl+h", () => {
+    const a = document.createElement("a");
+    a.href = "/classifier/shortcuts";
+    a.target = "_blank";
+    a.click();
+  })
 
   useEffect(() => {
     const handleKeyUp = (event: KeyboardEvent) => {
@@ -266,7 +272,7 @@ function ClassificationControls({
           ref={inputRef}
         />
       </form>
-      <a href="/classifier/shortcuts" target="_blank"><Keyboard /></a>
+      <a className="z-20" href="/classifier/shortcuts" target="_blank"><Keyboard /></a>
     </div>
   );
 }

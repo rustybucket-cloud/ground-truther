@@ -3,17 +3,19 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Classifier } from "./features/index.ts";
+import { Classifier, ClassifierShortcuts } from "./features/index.ts";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    loader: (req) => {
-      console.log(req)
-      return null
-    },
-    children: [{ path: "/classifier", element: <Classifier /> }],
+    children: [
+      {
+        path: "/classifier",
+        element: <Classifier />,
+      },
+      { path: "/classifier/shortcuts", element: <ClassifierShortcuts /> },
+    ],
   },
 ]);
 
