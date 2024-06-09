@@ -1,5 +1,6 @@
-import { Classifier } from "./features";
+import { useEffect } from "react";
 import { css } from "@linaria/core";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const appCss = css`
   --header-height: 3rem;
@@ -10,6 +11,16 @@ const headerCss = css`
 `
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // always redirect to classifier for now
+  useEffect(() => {
+    if (location.pathname === "/") {
+      navigate("/classifier");
+    }
+  }, [location.pathname, navigate])
+
   return (
     <div className={appCss}>
       <header className={`bg-primary p-3 ${headerCss}`}>
@@ -18,7 +29,7 @@ function App() {
         </div>
       </header>
       <main>
-        <Classifier />
+        <Outlet />
       </main>
     </div>
   );

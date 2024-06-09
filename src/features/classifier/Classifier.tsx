@@ -1,6 +1,18 @@
-import { useEffect, useRef, useCallback, useState, useMemo, FormEventHandler } from "react";
+import {
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+  FormEventHandler,
+} from "react";
 import { Button } from "../../Button/Button";
-import { ImageViewer, useImageViewer, UseImageViewerReturn } from "../../components";
+import {
+  ImageViewer,
+  useImageViewer,
+  UseImageViewerReturn,
+} from "../../components";
+import Keyboard from "../../components/Icons/Keyboard";
 import { css } from "@linaria/core";
 import {
   Dialog,
@@ -26,19 +38,22 @@ export function Classifier() {
   const imageViewer = useImageViewer(uploadedImages);
   const [isFinished, setIsFinished] = useState(false);
   const [classifications, setClassifications] = useState<Classification[]>([]);
-  const fileNamesRef = useRef<string[]>([])
+  const fileNamesRef = useRef<string[]>([]);
 
   const classifcationCounts = useMemo(() => {
-    return classifications.reduce((prev: ClassificationCounts, classification) => {
-      if (classification.classification) {
-        return {
-          ...prev,
-          [classification.classification]:
-            (prev[classification.classification] || 0) + 1,
-        };
-      }
-      return prev;
-    }, {});
+    return classifications.reduce(
+      (prev: ClassificationCounts, classification) => {
+        if (classification.classification) {
+          return {
+            ...prev,
+            [classification.classification]:
+              (prev[classification.classification] || 0) + 1,
+          };
+        }
+        return prev;
+      },
+      {}
+    );
   }, [classifications]);
 
   const finish = useCallback(() => {
@@ -92,32 +107,35 @@ export function Classifier() {
         />
       ) : null}
       {uploadedImages.length === 0 ? (
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            if (!e.target.files) return;
-            const urls = Array.from(e.target.files).map((file) => {
-              return URL.createObjectURL(file);
-            });
-            // store the filenames separately so we can use them later
-            // for some reason when we try to make the blob and the filename the same object, it doesn't work
-            fileNamesRef.current = Array.from(e.target.files).map((file) => {
-              return file.name;
-            })
-            setUploadedImages((curr) => [...curr, ...urls]);
-            setClassifications((curr) => [
-              ...curr,
-              ...urls.map((src) => ({ src })),
-            ]);
-          }}
-        />
+        <div className="max-w-screen-xl px-2 mx-auto flex justify-center items-center flex-col h-full">
+          <p>Start classifying by uploading images!</p>
+          <input
+            className="p-5 rounded border-2 border-black"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              if (!e.target.files) return;
+              const urls = Array.from(e.target.files).map((file) => {
+                return URL.createObjectURL(file);
+              });
+              // store the filenames separately so we can use them later
+              // for some reason when we try to make the blob and the filename the same object, it doesn't work
+              fileNamesRef.current = Array.from(e.target.files).map((file) => {
+                return file.name;
+              });
+              setUploadedImages((curr) => [...curr, ...urls]);
+              setClassifications((curr) => [
+                ...curr,
+                ...urls.map((src) => ({ src })),
+              ]);
+            }}
+          />
+        </div>
       ) : null}
       {isFinished ? (
-        <div>
-          <h1>Finished!</h1>
-          <h2>Results</h2>
+        <div className="max-w-screen-xl px-2 mx-auto flex justify-center items-center flex-col h-full">
+          <h2 className="text-2xl">Results</h2>
           <ul>
             {Object.entries(classifcationCounts).map(
               ([classification, count]) => (
@@ -186,7 +204,8 @@ function ClassificationControls({
       });
       setQuery("");
       inputRef.current?.blur();
-      if (imageViewer.imageViewerRef.current) imageViewer.imageViewerRef.current.focus();
+      if (imageViewer.imageViewerRef.current)
+        imageViewer.imageViewerRef.current.focus();
       if (imageViewer.hasNext) imageViewer.nextImage();
       else finish(classifications);
     },
@@ -228,7 +247,7 @@ function ClassificationControls({
   }, [classificationOptions, setImageClassification]);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       {classificationOptions.map((classification, i) => (
         <Button
           key={classification}
@@ -247,6 +266,7 @@ function ClassificationControls({
           ref={inputRef}
         />
       </form>
+      <a href="/classifier/shortcuts" target="_blank"><Keyboard /></a>
     </div>
   );
 }
